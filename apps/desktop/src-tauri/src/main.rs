@@ -9,11 +9,26 @@ use std::env;
 use tauri::Manager;
 
 fn main() {
-    env_logger::init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    
+    // Inicializar SidecarManager e iniciar backend
+    let mut sidecar_manager = sidecar::SidecarManager::new();
+    
+    if let Err(e) = sidecar_manager.start() {
+        error!("Falha ao iniciar backend: {}", e);
+        eprintln!("Erro crítico: Não foi possível iniciar o backend. Detalhes: {}", e);
+        std::process::exit(1);
+    }
+    
+    let backend_url = sidecar_manager.get_url();
+    info!("Backend iniciado em {}", backend_url);
     
     let result = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(state::AppState::default())
+        .manage(state::AppState {
+            backend_url: std::sync::Mutex::new(Some(backend_url)),
+            backend_port: std::sync::Mutex::new(None),
+        })
         .invoke_handler(tauri::generate_handler![
             commands::get_health,
             commands::get_backend_url

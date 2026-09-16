@@ -50,6 +50,17 @@ impl SidecarManager {
             info!("Backend iniciado com sucesso na porta {}", port);
             Ok(())
         } else {
+            // Tentar obter logs de erro do processo
+            if let Some(child) = &mut self.child {
+                if let Ok(stderr) = child.stderr.take() {
+                    use std::io::Read;
+                    let mut stderr = stderr;
+                    let mut error_output = String::new();
+                    if stderr.read_to_string(&mut error_output).is_ok() {
+                        error!("Erro do backend: {}", error_output);
+                    }
+                }
+            }
             Err("Backend não respondeu ao health check".to_string())
         }
     }

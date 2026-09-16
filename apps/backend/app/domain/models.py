@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
@@ -7,8 +7,8 @@ from sqlmodel import Field, SQLModel
 class TimestampMixin(SQLModel):
     """Mixin para campos de timestamp."""
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False)
 
 
 class SemesterBase(SQLModel):

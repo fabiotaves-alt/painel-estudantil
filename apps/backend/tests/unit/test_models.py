@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+from pydantic import ValidationError
 
 from app.domain.models import Semester, Subject
 from app.schemas.responses import SemesterCreate
@@ -40,7 +41,7 @@ class TestSemesterModel:
         assert semester.year == 2024
 
         # Ano muito antigo deve falhar na validação do Field (ge=2000)
-        with pytest.raises(Exception):  # ValidationError do Pydantic
+        with pytest.raises(ValidationError):
             SemesterCreate(
                 name="Antigo",
                 year=1900,
@@ -49,7 +50,7 @@ class TestSemesterModel:
             )
 
         # Ano muito futuro deve falhar na validação do Field (le=2100)
-        with pytest.raises(Exception):  # ValidationError do Pydantic
+        with pytest.raises(ValidationError):
             SemesterCreate(
                 name="Futuro",
                 year=2200,

@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Generic, TypeVar
+from datetime import UTC, datetime
+from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -10,13 +10,13 @@ class MetaInfo(BaseModel):
     """Metadados de resposta da API."""
 
     request_id: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class APIResponse(BaseModel, Generic[DataT]):
+class APIResponse[T](BaseModel):
     """Resposta padrão de sucesso da API."""
 
-    data: DataT
+    data: T
     meta: MetaInfo
 
     model_config = ConfigDict(from_attributes=True)
@@ -43,7 +43,7 @@ class HealthResponse(BaseModel):
 
     status: str = "ok"
     version: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 # Semester
