@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/tauriconf.json",
+  "productName": "Dashboard Acadêmico",
+  "version": "0.1.0",
+  "identifier": "com.dashboard-academico.app",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "Dashboard Acadêmico",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 768,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis", "appimage", "deb"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [],
+    "resources": [],
+    "copyright": "© 2024 Dashboard Acadêmico",
+    "category": "Education",
+    "shortDescription": "Visualizador de dados acadêmicos offline-first",
+    "longDescription": "Aplicativo desktop para visualizar, importar e validar dados acadêmicos extraídos de PDFs, com foco em privacidade e funcionamento offline."
+  },
+  "plugins": {
+    "shell": {
+      "scope": [
+        {
+          "name": "backend-health",
+          "cmd": "curl",
+          "args": ["--silent", "--fail", "http://127.0.0.1:*/api/v1/health"]
+        }
+      ]
+    }
+  }
+}
