@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,7 +27,7 @@ class APIError(BaseModel):
 
     code: str
     message: str
-    details: Optional[dict] = None
+    details: dict | None = None
 
 
 class APIErrorResponse(BaseModel):
@@ -60,11 +60,11 @@ class SemesterCreate(BaseModel):
 class SemesterUpdate(BaseModel):
     """Schema para atualizar semestre."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    year: Optional[int] = Field(None, ge=2000, le=2100)
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    is_current: Optional[bool] = None
+    name: str | None = Field(None, min_length=1, max_length=100)
+    year: int | None = Field(None, ge=2000, le=2100)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    is_current: bool | None = None
 
 
 class SemesterRead(BaseModel):
@@ -88,8 +88,8 @@ class SubjectCreate(BaseModel):
 
     code: str = Field(..., min_length=1, max_length=20)
     name: str = Field(..., min_length=1, max_length=200)
-    professor: Optional[str] = Field(None, max_length=200)
-    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    professor: str | None = Field(None, max_length=200)
+    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
     workload_hours: int = Field(..., ge=1, le=1000)
     semester_id: int
 
@@ -97,12 +97,12 @@ class SubjectCreate(BaseModel):
 class SubjectUpdate(BaseModel):
     """Schema para atualizar disciplina."""
 
-    code: Optional[str] = Field(None, min_length=1, max_length=20)
-    name: Optional[str] = Field(None, min_length=1, max_length=200)
-    professor: Optional[str] = Field(None, max_length=200)
-    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
-    workload_hours: Optional[int] = Field(None, ge=1, le=1000)
-    semester_id: Optional[int] = None
+    code: str | None = Field(None, min_length=1, max_length=20)
+    name: str | None = Field(None, min_length=1, max_length=200)
+    professor: str | None = Field(None, max_length=200)
+    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    workload_hours: int | None = Field(None, ge=1, le=1000)
+    semester_id: int | None = None
 
 
 class SubjectRead(BaseModel):
@@ -111,8 +111,8 @@ class SubjectRead(BaseModel):
     id: int
     code: str
     name: str
-    professor: Optional[str]
-    color: Optional[str]
+    professor: str | None
+    color: str | None
     workload_hours: int
     semester_id: int
     created_at: datetime
@@ -129,18 +129,18 @@ class ClassMeetingCreate(BaseModel):
     weekday: int = Field(..., ge=0, le=6)
     start_time: datetime
     end_time: datetime
-    location: Optional[str] = Field(None, max_length=200)
-    notes: Optional[str] = None
+    location: str | None = Field(None, max_length=200)
+    notes: str | None = None
 
 
 class ClassMeetingUpdate(BaseModel):
     """Schema para atualizar aula."""
 
-    weekday: Optional[int] = Field(None, ge=0, le=6)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    location: Optional[str] = Field(None, max_length=200)
-    notes: Optional[str] = None
+    weekday: int | None = Field(None, ge=0, le=6)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    location: str | None = Field(None, max_length=200)
+    notes: str | None = None
 
 
 class ClassMeetingRead(BaseModel):
@@ -151,8 +151,8 @@ class ClassMeetingRead(BaseModel):
     weekday: int
     start_time: datetime
     end_time: datetime
-    location: Optional[str]
-    notes: Optional[str]
+    location: str | None
+    notes: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -174,8 +174,8 @@ class ImportJobRead(BaseModel):
     filename: str
     file_hash: str
     status: str
-    extracted_at: Optional[datetime]
-    error: Optional[str]
+    extracted_at: datetime | None
+    error: str | None
     created_at: datetime
     updated_at: datetime
 

@@ -12,7 +12,6 @@ from app.api.v1.router import api_router
 from app.config import settings
 from app.infrastructure.database import database
 
-
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -25,21 +24,21 @@ async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida da aplicação."""
     # Startup
     logger.info("Iniciando aplicação %s v%s", settings.app_name, settings.app_version)
-    
+
     # Inicializar banco de dados
     database.init()
     await database.create_tables()
     logger.info("Banco de dados inicializado")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Encerrando aplicação")
 
 
 def create_app() -> FastAPI:
     """Factory para criar a aplicação FastAPI."""
-    
+
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -72,12 +71,12 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         logger.error("Erro não tratado: %s", exc, exc_info=exc)
-        
+
         if settings.debug:
             message = str(exc)
         else:
             message = "Erro interno do servidor"
-        
+
         return JSONResponse(
             status_code=500,
             content={
