@@ -1,4 +1,5 @@
 import logging
+import secrets
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -18,12 +19,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Token gerado por execução para autenticação local
+_execution_token: str | None = None
+
+
+def get_execution_token() -> str:
+    """Retorna o token de execução atual, gerando um novo se necessário."""
+    global _execution_token
+    if _execution_token is None:
+        _execution_token = secrets.token_urlsafe(32)
+    return _execution_token
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida da aplicação."""
+    global _execution_token
+
     # Startup
     logger.info("Iniciando aplicação %s v%s", settings.app_name, settings.app_version)
+
+    # Gerar token de execução
+    _execution_token = secrets.token_urlsafe(32)
+    logger.info("Token de execução gerado (não logar)")
 
     # Inicializar banco de dados
     database.init()
@@ -34,6 +52,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Encerrando aplicação")
+    _execution_token = None
 
 
 def create_app() -> FastAPI:
@@ -49,15 +68,49 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS restrito (apenas Tauri em desenvolvimento)
+    # CORS restrito (apenas origem Tauri)
     if settings.debug:
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["http://localhost:5173", "tauri://localhost"],
+            allow_origins=["http://localhost:5173"],  # Vite dev server
             allow_credentials=True,
-            allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-            allow_headers=["Content-Type", settings.api_token_header],
+            allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+            allow_headers=[
+                "Content-Type",
+                "Authorization",
+                settings.api_token_header,
+                "X-Request-ID",
+            ],
         )
+
+    # Middleware para autenticação por token (exceto health check)
+    @app.middleware("http")
+    async def verify_token(request: Request, call_next):
+        # Health check não requer token
+        if request.url.path in ["/api/v1/health", "/api/v1/ready"]:
+            return await call_next(request)
+
+        # Verificar token de execução
+        token = request.headers.get(settings.api_token_header)
+        current_token = get_execution_token()
+
+        if not token or token != current_token:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Token de autenticação inválido ou ausente",
+                        "details": None,
+                    },
+                    "meta": {
+                        "request_id": str(uuid.uuid4()),
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
+                },
+            )
+
+        return await call_next(request)
 
     # Middleware para logging e request_id
     @app.middleware("http")
@@ -102,9 +155,20 @@ app = create_app()
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Dashboard Acadêmico Backend")
+    parser.add_argument("--port", type=int, default=settings.port, help="Porta do servidor")
+    parser.add_argument("--host", type=str, default=settings.host, help="Host do servidor")
+    args = parser.parse_args()
+
+    # Sobrescrever configurações com argumentos de linha de comando
+    settings.host = args.host
+    settings.port = args.port
+
     uvicorn.run(
         "app.main:app",
-        host=settings.host,
-        port=settings.port,
+        host=args.host,
+        port=args.port,
         reload=settings.debug,
     )
