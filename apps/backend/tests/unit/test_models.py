@@ -9,7 +9,7 @@ class TestSemesterModel:
     def test_semester_creation(self):
         """Deve criar um semestre com dados válidos."""
         from datetime import datetime
-        
+
         semester = Semester(
             name="2024.1",
             year=2024,
@@ -17,7 +17,7 @@ class TestSemesterModel:
             end_date=datetime(2024, 7, 31),
             is_current=True,
         )
-        
+
         assert semester.name == "2024.1"
         assert semester.year == 2024
         assert semester.is_current is True
@@ -25,7 +25,7 @@ class TestSemesterModel:
     def test_semester_year_validation(self):
         """Deve validar ano dentro do intervalo permitido."""
         from datetime import datetime
-        
+
         # Ano válido
         semester = Semester(
             name="Teste",
@@ -34,7 +34,7 @@ class TestSemesterModel:
             end_date=datetime(2024, 12, 31),
         )
         assert semester.year == 2024
-        
+
         # Ano muito antigo deve falhar na validação do Field
         with pytest.raises(Exception):
             Semester(
@@ -58,7 +58,7 @@ class TestSubjectModel:
             workload_hours=60,
             semester_id=1,
         )
-        
+
         assert subject.code == "MAT101"
         assert subject.name == "Matemática I"
         assert subject.workload_hours == 60
@@ -74,7 +74,7 @@ class TestSubjectModel:
             semester_id=1,
         )
         assert subject.color == "#00FF00"
-        
+
         # Cor inválida deve falhar
         with pytest.raises(Exception):
             Subject(
