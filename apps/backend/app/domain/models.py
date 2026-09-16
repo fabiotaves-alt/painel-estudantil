@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pydantic import field_validator
 from sqlmodel import Field, SQLModel
 
 
@@ -18,6 +19,14 @@ class SemesterBase(SQLModel):
     start_date: datetime = Field(...)
     end_date: datetime = Field(...)
     is_current: bool = Field(default=False)
+
+    @field_validator("year")
+    @classmethod
+    def validate_year(cls, v: int) -> int:
+        """Valida se o ano está dentro do intervalo permitido."""
+        if v < 2000 or v > 2100:
+            raise ValueError("Year must be between 2000 and 2100")
+        return v
 
 
 class Semester(SemesterBase, TimestampMixin, table=True):
