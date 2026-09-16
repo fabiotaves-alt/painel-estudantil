@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter
 
@@ -25,7 +26,7 @@ async def health_check() -> HealthResponse:
 
 
 @router.get("/ready")
-async def readiness_check() -> dict:
+async def readiness_check() -> dict[str, Any]:
     """
     Verifica se a API está pronta para receber requisições.
 

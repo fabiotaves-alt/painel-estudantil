@@ -1,13 +1,14 @@
 import logging
 import secrets
 import uuid
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from app.api.v1.router import api_router
 from app.config import settings
@@ -32,7 +33,7 @@ def get_execution_token() -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Gerencia o ciclo de vida da aplicação."""
     global _execution_token
 
@@ -85,7 +86,7 @@ def create_app() -> FastAPI:
 
     # Middleware para autenticação por token (exceto health check)
     @app.middleware("http")
-    async def verify_token(request: Request, call_next):
+    async def verify_token(request: Request, call_next: Callable[[Request], Response]) -> Response:
         # Health check não requer token
         if request.url.path in ["/api/v1/health", "/api/v1/ready"]:
             return await call_next(request)
@@ -105,7 +106,7 @@ def create_app() -> FastAPI:
                     },
                     "meta": {
                         "request_id": str(uuid.uuid4()),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 },
             )
@@ -114,7 +115,7 @@ def create_app() -> FastAPI:
 
     # Middleware para logging e request_id
     @app.middleware("http")
-    async def add_request_id(request: Request, call_next):
+    async def add_request_id(request: Request, call_next: Callable[[Request], Response]) -> Response:
         request_id = str(uuid.uuid4())
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
@@ -122,7 +123,7 @@ def create_app() -> FastAPI:
 
     # Handler global de erros
     @app.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception):
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         logger.error("Erro não tratado: %s", exc, exc_info=exc)
 
         if settings.debug:
@@ -140,7 +141,7 @@ def create_app() -> FastAPI:
                 },
                 "meta": {
                     "request_id": request.headers.get("x-request-id", "unknown"),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             },
         )

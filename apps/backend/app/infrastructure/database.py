@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
@@ -5,6 +6,8 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -43,8 +46,12 @@ class Database:
 
     async def create_tables(self) -> None:
         """Cria todas as tabelas no banco de dados."""
-        async with self.engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
+        try:
+            async with self.engine.begin() as conn:
+                await conn.run_sync(SQLModel.metadata.create_all)
+        except Exception as e:
+            logger.error("Erro ao criar tabelas: %s", e)
+            raise
 
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         """Gera sessões do banco de dados."""
