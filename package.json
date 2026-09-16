@@ -1,0 +1,23 @@
+{
+  "name": "dashboard-academico",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dashboard Acadêmico Offline-First",
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/desktop",
+    "build": "npm run build --workspace=apps/desktop",
+    "tauri": "npm run tauri --workspace=apps/desktop",
+    "test:frontend": "npm run test --workspace=apps/desktop",
+    "test:backend": "cd apps/backend && pytest",
+    "lint:frontend": "npm run lint --workspace=apps/desktop",
+    "lint:backend": "cd apps/backend && ruff check .",
+    "typecheck": "npm run typecheck --workspace=apps/desktop"
+  },
+  "workspaces": [
+    "apps/desktop"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
