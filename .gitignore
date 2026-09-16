@@ -1,24 +1,32 @@
 ```
-# Python
-__pycache__/
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Compiled files
 *.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-htmlcov/
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+__pycache__/
+
+# Logs and temp files
 *.log
-.DS_Store
-Thumbs.db
+*.tmp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Test coverage
+.coverage
+
+# Vite specific
+.vite/
 ```

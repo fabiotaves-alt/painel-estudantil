@@ -1,7 +1,9 @@
-import pytest
 from datetime import datetime
 
+import pytest
+
 from app.domain.models import Semester, Subject
+from app.schemas.responses import SemesterCreate
 
 
 class TestSemesterModel:
@@ -21,10 +23,15 @@ class TestSemesterModel:
         assert semester.year == 2024
         assert semester.is_current is True
 
-    def test_semester_year_validation(self):
-        """Deve validar ano dentro do intervalo permitido."""
+    def test_semester_year_validation_in_schema(self):
+        """Deve validar ano dentro do intervalo permitido no schema de entrada.
+        
+        Nota: Modelos SQLModel com table=True não executam validações na construção,
+        pois dados vêm diretamente do banco. A validação ocorre nos schemas de entrada
+        da API (Pydantic/SQLModel sem table=True).
+        """
         # Ano válido
-        semester = Semester(
+        semester = SemesterCreate(
             name="Teste",
             year=2024,
             start_date=datetime(2024, 1, 1),
@@ -32,13 +39,22 @@ class TestSemesterModel:
         )
         assert semester.year == 2024
 
-        # Ano muito antigo deve falhar na validação do Field
-        with pytest.raises(ValueError):
-            Semester(
+        # Ano muito antigo deve falhar na validação do Field (ge=2000)
+        with pytest.raises(Exception):  # ValidationError do Pydantic
+            SemesterCreate(
                 name="Antigo",
                 year=1900,
                 start_date=datetime(1900, 1, 1),
                 end_date=datetime(1900, 12, 31),
+            )
+
+        # Ano muito futuro deve falhar na validação do Field (le=2100)
+        with pytest.raises(Exception):  # ValidationError do Pydantic
+            SemesterCreate(
+                name="Futuro",
+                year=2200,
+                start_date=datetime(2200, 1, 1),
+                end_date=datetime(2200, 12, 31),
             )
 
 
