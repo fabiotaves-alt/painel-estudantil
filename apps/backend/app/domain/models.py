@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import field_validator
 from sqlmodel import Field, SQLModel
@@ -7,8 +7,8 @@ from sqlmodel import Field, SQLModel
 class TimestampMixin(SQLModel):
     """Mixin para campos de timestamp."""
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), nullable=False)
 
 
 class SemesterBase(SQLModel):
@@ -19,14 +19,6 @@ class SemesterBase(SQLModel):
     start_date: datetime = Field(...)
     end_date: datetime = Field(...)
     is_current: bool = Field(default=False)
-
-    @field_validator("year")
-    @classmethod
-    def validate_year(cls, v: int) -> int:
-        """Valida se o ano está dentro do intervalo permitido."""
-        if v < 2000 or v > 2100:
-            raise ValueError("Year must be between 2000 and 2100")
-        return v
 
 
 class Semester(SemesterBase, TimestampMixin, table=True):

@@ -2,7 +2,7 @@ import logging
 import secrets
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -19,29 +19,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Token gerado por execução para autenticação local
-_execution_token: str | None = None
-
-
-def get_execution_token() -> str:
-    """Retorna o token de execução atual, gerando um novo se necessário."""
-    global _execution_token
-    if _execution_token is None:
-        _execution_token = secrets.token_urlsafe(32)
-    return _execution_token
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida da aplicação."""
-    global _execution_token
-
     # Startup
     logger.info("Iniciando aplicação %s v%s", settings.app_name, settings.app_version)
-
-    # Gerar token de execução
-    _execution_token = secrets.token_urlsafe(32)
-    logger.info("Token de execução gerado (não logar)")
 
     # Inicializar banco de dados
     database.init()
@@ -52,7 +35,10 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Encerrando aplicação")
-    _execution_token = None
+    
+    # Fechar conexões do banco de dados
+    await database.dispose()
+    logger.info("Conexões do banco de dados fechadas")
 
 
 def create_app() -> FastAPI:
@@ -67,6 +53,10 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
         lifespan=lifespan,
     )
+
+    # Armazenar token no estado da aplicação em vez de variável global
+    app.state.execution_token = secrets.token_urlsafe(32)
+    logger.info("Token de execução gerado (não logar)")
 
     # CORS restrito (apenas origem Tauri)
     if settings.debug:
@@ -90,11 +80,11 @@ def create_app() -> FastAPI:
         if request.url.path in ["/api/v1/health", "/api/v1/ready"]:
             return await call_next(request)
 
-        # Verificar token de execução
+        # Verificar token de execução usando app.state em vez de variável global
         token = request.headers.get(settings.api_token_header)
-        current_token = get_execution_token()
+        current_token = getattr(request.app.state, "execution_token", None)
 
-        if not token or token != current_token:
+        if not token or not secrets.compare_digest(token, current_token):
             return JSONResponse(
                 status_code=401,
                 content={
@@ -105,7 +95,7 @@ def create_app() -> FastAPI:
                     },
                     "meta": {
                         "request_id": str(uuid.uuid4()),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 },
             )
@@ -140,7 +130,7 @@ def create_app() -> FastAPI:
                 },
                 "meta": {
                     "request_id": request.headers.get("x-request-id", "unknown"),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             },
         )

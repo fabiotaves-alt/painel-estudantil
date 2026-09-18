@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter
 
 from app.config import settings
+from app.infrastructure.database import database
 from app.schemas.responses import HealthResponse
 
 router = APIRouter()
@@ -31,8 +32,18 @@ async def readiness_check() -> dict:
 
     Diferente do health check, este endpoint verifica dependências externas.
     """
+    # Verificar conexão com banco de dados
+    try:
+        await database.engine.connect()
+        db_status = "connected"
+        ready = True
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        ready = False
+    
     return {
-        "ready": True,
+        "ready": ready,
+        "database": db_status,
         "timestamp": datetime.now(UTC).isoformat(),
         "request_id": str(uuid.uuid4()),
     }

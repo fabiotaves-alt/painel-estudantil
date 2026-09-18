@@ -57,11 +57,10 @@ impl SidecarManager {
     fn get_backend_path(&self) -> Result<PathBuf, String> {
         #[cfg(debug_assertions)]
         {
-            let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-            Ok(PathBuf::from(manifest_dir)
-                .join("../../apps/backend/venv/bin/python")
-                .canonicalize()
-                .map_err(|e| format!("Erro ao resolver caminho: {}", e))?)
+            // Em debug mode, usa python3 do PATH em vez de assumir venv
+            // Isso evita erros quando o venv não existe ou está em local diferente
+            info!("Modo debug: usando python3 do PATH");
+            Ok(PathBuf::from("python3"))
         }
 
         #[cfg(not(debug_assertions))]

@@ -58,5 +58,12 @@ class Database:
             finally:
                 await session.close()
 
+    async def dispose(self) -> None:
+        """Fecha todas as conexões do engine."""
+        if self._engine:
+            await self._engine.dispose()
+            self._engine = None
+            self._session_maker = None
+
 
 database = Database()
